@@ -1,0 +1,108 @@
+/graph/
+#include <stdio.h>
+#define MAX 10
+#define INF 9999
+int main() {
+    int n, i, j, k, changed;
+    int cost[MAX][MAX], dist[MAX][MAX], next[MAX][MAX];
+    printf("Enter number of nodes: ");
+    if (scanf("%d", &n) != 1) return 0;
+    printf("Enter adjacency matrix (use %d for no link):\n", INF);
+    for (i = 0; i < n; i++)
+        for (j = 0; j < n; j++) {
+            scanf("%d", &cost[i][j]);
+            if (i != j && cost[i][j] == 0) cost[i][j] = INF;
+            dist[i][j] = cost[i][j];
+            next[i][j] = (dist[i][j] != INF && i != j) ? j : -1;
+        }
+    do {
+        changed = 0;
+        for (i = 0; i < n; i++) {
+            for (k = 0; k < n; k++) {
+                if (dist[i][k] == INF || next[i][k] == -1) continue;
+                for (j = 0; j < n; j++) {
+                    if (dist[k][j] == INF) continue;
+                    if (dist[i][j] > dist[i][k] + dist[k][j]) {
+                        dist[i][j] = dist[i][k] + dist[k][j];
+                        next[i][j] = next[i][k];
+                        changed = 1;
+                    }
+                }
+            }
+        }
+    } while (changed);
+    for (i = 0; i < n; i++) {
+        printf("\nRouting table for node %d\n", i);
+        printf("Dest\tNextHop\tCost\n");
+        for (j = 0; j < n; j++) {
+            if (i == j) printf("%d\t-\t0\n", j);
+            else if (dist[i][j] >= INF) printf("%d\t-\tINF\n", j);
+            else printf("%d\t%d\t%d\n", j, next[i][j], dist[i][j]);
+        }
+    }
+    return 0;
+}
+/crc/
+     #include <stdio.h>
+#include <stdint.h>
+#include <string.h>
+#define CRC16_INIT      0x0000
+#define CRCCCITT_INIT   0xFFFF
+#define CRC12_INIT      0x000
+uint16_t crc12(const uint8_t *data, size_t len) {
+    uint16_t crc = CRC12_INIT;
+    uint16_t poly = 0x180F; // 0001 1000 0000 1111
+    for (size_t i = 0; i < len; i++) {
+        crc ^= data[i] << 4;    
+for (int j = 0; j < 8; j++) {
+            if (crc & 0x800)    
+                crc = (crc << 1) ^ poly;
+            else
+                crc <<= 1;
+            crc &= 0xFFF;       
+        }
+    }
+    return crc;
+}
+uint16_t crc16(const uint8_t *data, size_t len) {
+    uint16_t crc = CRC16_INIT;
+    uint16_t poly = 0x8005; 
+    for (size_t i = 0; i < len; i++) {
+        crc ^= data[i] << 8;
+        for (int j = 0; j < 8; j++) {
+            if (crc & 0x8000)
+                crc = (crc << 1) ^ poly;
+            else
+                crc <<= 1;
+        }
+    }
+    return crc;
+}
+uint16_t crc_ccitt(const uint8_t *data, size_t len) {
+    uint16_t crc = CRCCCITT_INIT;
+    uint16_t poly = 0x1021;
+    for (size_t i = 0; i < len; i++) {
+        crc ^= data[i] << 8;
+        for (int j = 0; j < 8; j++) {
+            if (crc & 0x8000)
+                crc = (crc << 1) ^ poly;
+            else
+                crc <<= 1;
+        }
+    }
+    return crc;
+}
+int main() {
+    char input[128];
+    printf("Enter the data string: ");
+    scanf("%127s", input);
+    size_t len = strlen(input);
+uint16_t c12 = crc12((uint8_t*)input, len);
+    uint16_t c16 = crc16((uint8_t*)input, len);
+    uint16_t cccitt = crc_ccitt((uint8_t*)input, len);
+    printf("\nCRC Results:\n");
+    printf("CRC-12:    0x%03X (12 bits)\n", c12);
+    printf("CRC-16:    0x%04X (16 bits)\n", c16);
+    printf("CRC-CCITT: 0x%04X (16 bits)\n", cccitt);
+    return 0;
+}
