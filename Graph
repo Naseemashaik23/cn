@@ -1,0 +1,43 @@
+#include <stdio.h>
+#define MAX 10
+#define INF 9999
+int main() {
+    int n, i, j, k, changed;
+    int cost[MAX][MAX], dist[MAX][MAX], next[MAX][MAX];
+    printf("Enter number of nodes: ");
+    if (scanf("%d", &n) != 1) return 0;
+    printf("Enter adjacency matrix (use %d for no link):\n", INF);
+    for (i = 0; i < n; i++)
+        for (j = 0; j < n; j++) {
+            scanf("%d", &cost[i][j]);
+            if (i != j && cost[i][j] == 0) cost[i][j] = INF;
+            dist[i][j] = cost[i][j];
+            next[i][j] = (dist[i][j] != INF && i != j) ? j : -1;
+        }
+    do {
+        changed = 0;
+        for (i = 0; i < n; i++) {
+            for (k = 0; k < n; k++) {
+                if (dist[i][k] == INF || next[i][k] == -1) continue;
+                for (j = 0; j < n; j++) {
+                    if (dist[k][j] == INF) continue;
+                    if (dist[i][j] > dist[i][k] + dist[k][j]) {
+                        dist[i][j] = dist[i][k] + dist[k][j];
+                        next[i][j] = next[i][k];
+                        changed = 1;
+                    }
+                }
+            }
+        }
+    } while (changed);
+    for (i = 0; i < n; i++) {
+        printf("\nRouting table for node %d\n", i);
+        printf("Dest\tNextHop\tCost\n");
+        for (j = 0; j < n; j++) {
+            if (i == j) printf("%d\t-\t0\n", j);
+            else if (dist[i][j] >= INF) printf("%d\t-\tINF\n", j);
+            else printf("%d\t%d\t%d\n", j, next[i][j], dist[i][j]);
+        }
+    }
+    return 0;
+}
