@@ -106,3 +106,48 @@ uint16_t c12 = crc12((uint8_t*)input, len);
     printf("CRC-CCITT: 0x%04X (16 bits)\n", cccitt);
     return 0;
 }
+//checksum//
+#include <stdio.h>
+#include <string.h>
+
+static unsigned char checksum(const char *s){
+    unsigned int sum = 0;
+    for (size_t i = 0; s[i]; ++i) sum += (unsigned char)s[i];
+    return (unsigned char)(sum & 0xFF);
+}
+
+int main(void){
+    char data[100], recv[100];
+    unsigned char frame[110];
+    int frame_len;
+
+    printf("Enter data to send: ");
+    scanf("%99s", data);             // safer: avoids overflow
+    int dlen = strlen(data);
+    unsigned char cs = checksum(data);
+
+    frame[0] = 0x7E;
+    memcpy(&frame[1], data, dlen);
+    frame[1 + dlen] = cs;
+    frame[2 + dlen] = 0x7F;
+    frame_len = 3 + dlen;
+
+    printf("Transmitted Frame (in hex): ");
+    for (int i = 0; i < frame_len; ++i) printf("%02X ", frame[i]);
+    printf("\n");
+
+    // receive & verify (same logic as before)
+    if (frame[0] != 0x7E || frame[frame_len - 1] != 0x7F) {
+        printf("Frame error: Invalid framing bytes.\n");
+        return 0;
+    }
+    memcpy(recv, &frame[1], dlen);
+    recv[dlen] = '\0';
+    if (frame[1 + dlen] != checksum(recv)) {
+        printf("Checksum error!\n");
+        return 0;
+    }
+
+    printf("Received data: %s\nNo error detected in frame.\n", recv);
+    return 0;
+}
